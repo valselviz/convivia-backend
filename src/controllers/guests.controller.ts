@@ -46,7 +46,9 @@ export const GuestsController = {
         guest_type: payload.guest_type,
         main_guest_id: parseNumber(payload.main_guest_id),
         side: payload.side ?? null,
+        gender: payload.gender,
         age_range: payload.age_range,
+        avatar_key: payload.avatar_key ?? null,
         notes: payload.notes ?? null,
         status: payload.status,
       });
@@ -70,7 +72,9 @@ export const GuestsController = {
         guest_type: payload.guest_type,
         main_guest_id: parseNumber(payload.main_guest_id),
         side: payload.side,
+        gender: payload.gender,
         age_range: payload.age_range,
+        avatar_key: payload.avatar_key,
         notes: payload.notes,
         status: payload.status,
       });
@@ -78,6 +82,20 @@ export const GuestsController = {
       res.json(guest);
     } catch (error) {
       res.status(400).json({ error: "Failed to update guest" });
+    }
+  },
+  remove: async (req: Request, res: Response) => {
+    try {
+      const id = parseNumber(req.params.id);
+      if (!id) {
+        res.status(400).json({ error: "Invalid guest id" });
+        return;
+      }
+
+      await GuestsService.remove(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(400).json({ error: "Failed to delete guest" });
     }
   },
 };

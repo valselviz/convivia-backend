@@ -1,17 +1,22 @@
 import express from "express";
+import cors from "cors";
 import guestsRouter from "./routes/guests.routes.js";
+import coupleRouter from "./routes/couple.routes.js";
 import guestGroupsRouter from "./routes/guest-groups.routes.js";
 import tablesRouter from "./routes/tables.routes.js";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
+app.use("/static", express.static("public"));
 
 app.get("/", (req, res) => {
   res.send("Wedding backend API");
 });
 
 app.use("/guests", guestsRouter);
+app.use("/couple", coupleRouter);
 app.use("/groups", guestGroupsRouter);
 app.use("/tables", tablesRouter);
 
