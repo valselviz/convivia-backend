@@ -37,4 +37,7 @@ export const GuestsService = {
   ): Promise<Guest> => {
     return prisma.guest.update({ where: { id }, data });
   },
+  delete: async (ids: number[]): Promise<void> => {
+    await prisma.guest.deleteMany({ where: { id: { in: ids } } });
+  },
 };

@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:reset": "prisma migrate reset --force",
+    "db:migrate": "prisma migrate deploy"
   },
   "keywords": [],
   "author": "",

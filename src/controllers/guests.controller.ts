@@ -80,4 +80,17 @@ export const GuestsController = {
       res.status(400).json({ error: "Failed to update guest" });
     }
   },
+  delete: async (req: Request, res: Response) => {
+    try {
+      const id = parseNumber(req.params.id);
+      if (!id) {
+        res.status(400).json({ error: "Invalid guest id" });
+        return;
+      }
+      await GuestsService.delete([id]);
+      res.status(204).send();
+    } catch (error) {
+      res.status(400).json({ error: "Failed to delete guest" });
+    }
+  },
 };
