@@ -14,12 +14,22 @@ model Guest {
   main_guest_id     Int?
   main_guest        Guest?             @relation("MainGuest", fields: [main_guest_id], references: [id], onUpdate: NoAction)
   side              Side?
+  gender            Gender
   age_range         AgeRange           @default(ADULT)
+  avatar_key        String?            @db.VarChar(50)
   notes             String?
   status            Status             @default(INVITED)
   table_assignments TableAssignment[]
   group_members     GuestGroupMember[]
   other_guests      Guest[]            @relation("MainGuest")
+}
+
+model Couple {
+  id         Int      @id @default(autoincrement())
+  bride_name String   @db.VarChar(100)
+  groom_name String   @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model GuestGroup {
@@ -65,6 +75,11 @@ enum GuestType {
 enum Side {
   BRIDE
   GROOM
+}
+
+enum Gender {
+  FEMALE
+  MALE
 }
 
 enum AgeRange {
