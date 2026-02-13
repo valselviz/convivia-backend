@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import guestsRouter from "./routes/guests.routes.js";
 import guestGroupsRouter from "./routes/guest-groups.routes.js";
@@ -5,6 +6,7 @@ import tablesRouter from "./routes/tables.routes.js";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
