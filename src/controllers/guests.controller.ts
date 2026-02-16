@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Status } from "@prisma/client";
+import { Status, Side, GuestType } from "@prisma/client";
 import { GuestsService } from "../services/guests/guests.service.js";
 
 const parseNumber = (value: unknown): number | undefined => {
@@ -25,14 +25,55 @@ const parseStatus = (value: unknown): Status | undefined => {
     : undefined;
 };
 
+const parseSide = (value: unknown): Side | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  return Object.values(Side).includes(value as Side)
+    ? (value as Side)
+    : undefined;
+};
+
+const parseGuestType = (value: unknown): GuestType | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  return Object.values(GuestType).includes(value as GuestType)
+    ? (value as GuestType)
+    : undefined;
+};
+
+const parseString = (value: unknown): string | undefined => {
+  if (typeof value === "string" && value.trim()) {
+    return value.trim();
+  }
+  return undefined;
+};
+
 export const GuestsController = {
   list: async (req: Request, res: Response) => {
     try {
       const status = parseStatus(req.query.status);
       const groupId = parseNumber(req.query.groupId);
       const tableId = parseNumber(req.query.tableId);
+      const search = parseString(req.query.search);
+      const side = parseSide(req.query.side);
+      const type = parseGuestType(req.query.type);
+      const plusOne = req.query.plusOne === "only" ? "only" : "all";
+      const order = req.query.order === "notes" ? "notes" : "name";
 
-      const guests = await GuestsService.list({ status, groupId, tableId });
+      const guests = await GuestsService.list({
+        status,
+        groupId,
+        tableId,
+        search,
+        side,
+        type,
+        plusOne,
+        order,
+      });
       res.json(guests);
     } catch (error) {
       res.status(500).json({ error: "Failed to list guests" });

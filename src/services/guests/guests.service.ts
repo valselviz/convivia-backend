@@ -1,31 +1,87 @@
 import prisma from "../../client.js";
-import type { AgeRange, Gender, Guest, Prisma, Status } from "@prisma/client";
+import type { AgeRange, Gender, Guest, Prisma, Status, Side, GuestType } from "@prisma/client";
 
 export type GuestListFilters = {
   status?: Status;
   groupId?: number;
   tableId?: number;
+  search?: string;
+  side?: Side;
+  type?: GuestType;
+  plusOne?: "all" | "only";
+  order?: "name" | "notes";
 };
 
 export const GuestsService = {
   list: async (filters: GuestListFilters = {}): Promise<Guest[]> => {
-    const { status, groupId, tableId } = filters;
+    const { status, groupId, tableId, search, side, type, plusOne, order } = filters;
+
+    // Construir condiciones de búsqueda
+    const searchConditions: Prisma.GuestWhereInput[] = [];
+    
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      searchConditions.push({
+        OR: [
+          // Buscar en el nombre del invitado (case-insensitive)
+          {
+            full_name: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+          // Si es +1, buscar también en el nombre del invitado principal
+          {
+            AND: [
+              { guest_type: "PLUS_ONE" },
+              {
+                main_guest: {
+                  full_name: {
+                    contains: searchTerm,
+                    mode: "insensitive",
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      });
+    }
+
+    // Construir condiciones de filtros
+    const whereConditions: Prisma.GuestWhereInput = {
+      ...(status ? { status } : {}),
+      ...(side ? { side } : {}),
+      ...(type ? { guest_type: type } : {}),
+      ...(plusOne === "only" ? { guest_type: "PLUS_ONE" } : {}),
+      ...(groupId
+        ? {
+            group_members: {
+              some: { group_id: groupId },
+            },
+          }
+        : {}),
+      ...(tableId
+        ? {
+            table_assignments: {
+              some: { table_id: tableId },
+            },
+          }
+        : {}),
+      ...(searchConditions.length > 0 ? { AND: searchConditions } : {}),
+    };
+
+    // Determinar orden
+    const orderBy: Prisma.GuestOrderByWithRelationInput[] = [];
+    if (order === "notes") {
+      orderBy.push({ notes: "asc" });
+    } else {
+      orderBy.push({ full_name: "asc" });
+    }
 
     return prisma.guest.findMany({
-      where: {
-        status,
-        group_members: groupId
-          ? {
-              some: { group_id: groupId },
-            }
-          : undefined,
-        table_assignments: tableId
-          ? {
-              some: { table_id: tableId },
-            }
-          : undefined,
-      },
-      orderBy: { id: "asc" },
+      where: whereConditions,
+      orderBy,
     });
   },
   create: async (data: Prisma.GuestUncheckedCreateInput): Promise<Guest> => {
