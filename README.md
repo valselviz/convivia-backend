@@ -1,55 +1,100 @@
-# Wedding Backend
+# Backend - Wedding Management System
 
-API del backend de la boda (Express + Prisma + PostgreSQL).
+REST API for managing guests, groups, and tables for a wedding. Built with Express, Prisma, and PostgreSQL.
 
-## Requisitos
+## What does this project do?
 
-- **Node.js** ≥ 18.18 (recomendado: `nvm use 18` o `nvm use 20`)
-- **PostgreSQL** en ejecución (puerto 5432 por defecto)
+Allows you to manage:
+- **Guests**: create, edit, filter, and search guests. Handles main guests and plus-ones (+1).
+- **Groups**: organize guests into groups (family, friends, work, etc.) to facilitate table assignment.
+- **Tables**: define tables and assign guests (future functionality).
 
-## Configuración
+## Requirements
 
-1. Crea un archivo `.env` en la raíz del backend con:
+- Node.js 18.18 or higher (use `nvm use 18` if you have nvm)
+- PostgreSQL running on port 5432
 
-   ```env
-   DATABASE_URL="postgresql://USUARIO:PASSWORD@localhost:5432/wedding"
-   ```
+## Initial Setup
 
-   Sustituye `USUARIO` y `PASSWORD` por tu usuario y contraseña de PostgreSQL.
+### 1. Install dependencies
 
-2. Crea la base de datos en PostgreSQL (solo la primera vez):
+```bash
+npm install
+```
 
-   ```bash
-   createdb wedding
-   ```
+### 2. Configure database
 
-   O desde `psql`: `CREATE DATABASE wedding;`
+Create a `.env` file in the root with:
 
-## Recrear la base de datos
+```env
+DATABASE_URL="postgresql://your_user:your_password@localhost:5432/wedding"
+PORT=3000
+```
 
-Con PostgreSQL **en marcha**:
+### 3. Create the database
+
+If it doesn't exist, create it:
+
+```bash
+createdb wedding
+```
+
+Or from `psql`:
+```sql
+CREATE DATABASE wedding;
+```
+
+### 4. Apply migrations
 
 ```bash
 npm run db:reset
 ```
 
-Esto borra la base de datos, la vuelve a crear y aplica todas las migraciones.
-
-Alternativas:
-
-- `npm run db:generate` — solo genera el cliente de Prisma
-- `npm run db:migrate` — aplica migraciones sin borrar datos
-
-## Arrancar el servidor
+This deletes everything and recreates tables from scratch. If you already have data and just want to apply new migrations:
 
 ```bash
-npm run dev
+npm run db:migrate
 ```
 
-El API quedará en `http://localhost:3000` (o el `PORT` que definas en `.env`).
+## Useful Commands
 
-## Cómo levantar PostgreSQL (macOS)
+- `npm run dev` - Start development server (with hot reload)
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run start` - Run compiled version (production)
+- `npm run db:generate` - Regenerate Prisma client after changing the schema
+- `npm run db:reset` - Delete and recreate database with all migrations
+- `npm run db:seed` - Load sample data (guests) into the database
 
-- **Homebrew**: `brew services start postgresql@14` (o la versión que tengas)
-- **Postgres.app**: abre la app y inicia el servidor
-- **Docker**: `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`
+## Project Structure
+
+```
+src/
+├── controllers/     # HTTP endpoint logic
+├── routes/          # Route definitions
+├── services/        # Business logic and data access
+├── client.ts        # Prisma client
+└── index.ts         # Server entry point
+
+prisma/
+├── schema.prisma    # Database schema
+└── seed.ts          # Script to populate initial data
+```
+
+## Main Endpoints
+
+- `GET /guests` - List guests (supports filters and search)
+- `POST /guests` - Create a guest
+- `PATCH /guests/:id` - Update a guest
+- `DELETE /guests/:id` - Delete a guest
+- `GET /groups` - List groups
+- `POST /groups` - Create a group
+- `PUT /groups/:id` - Update a group
+- `DELETE /groups/:id` - Delete a group
+- `POST /groups/:id/members` - Add members to a group
+- `DELETE /groups/:id/members/:guestId` - Remove a member from a group
+
+## Notes
+
+- Server runs on `http://localhost:3000` by default (configurable with `PORT` in `.env`)
+- CORS is enabled to allow requests from the frontend
+- Avatars are served from `/static/avatars/` (from `public/` folder)

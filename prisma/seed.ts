@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const guests = [
-  // Novia - Familia
+  // Bride - Family
   { full_name: "Valeria", side: "BRIDE" as const, notes: "Familia" },
   { full_name: "Mami", side: "BRIDE" as const, notes: "Familia" },
   { full_name: "Jessica", side: "BRIDE" as const, notes: "Familia" },
@@ -14,7 +14,7 @@ const guests = [
   { full_name: "Hendrix", side: "BRIDE" as const, notes: "Familia" },
   { full_name: "Ninoska", side: "BRIDE" as const, notes: "Familia" },
   { full_name: "Genesis", side: "BRIDE" as const, notes: "Familia" },
-  // Novia - Amigos
+  // Bride - Friends
   { full_name: "Caro", side: "BRIDE" as const, notes: "Amigos" },
   { full_name: "Diana", side: "BRIDE" as const, notes: "Amigos" },
   { full_name: "Camilo", side: "BRIDE" as const, notes: "Amigos" },
@@ -29,7 +29,7 @@ const guests = [
   { full_name: "Jhohandersonsito", side: "BRIDE" as const, notes: "Amigos" },
   { full_name: "Liliana", side: "BRIDE" as const, notes: "Amigos" },
   { full_name: "Dilia", side: "BRIDE" as const, notes: "Amigos" },
-  // Novio - Familia
+  // Groom - Family
   { full_name: "Alfonso", side: "GROOM" as const, notes: "Familia" },
   { full_name: "Elena", side: "GROOM" as const, notes: "Familia" },
   { full_name: "Andrés", side: "GROOM" as const, notes: "Familia" },
@@ -51,17 +51,17 @@ const guests = [
     side: "GROOM" as const,
     notes: "Familia",
   },
-  // Novio - Amigos
+  // Groom - Friends
   { full_name: "Rodrigo", side: "GROOM" as const, notes: "Amigos" },
   { full_name: "Diego", side: "GROOM" as const, notes: "Amigos" },
   { full_name: "Nico", side: "GROOM" as const, notes: "Amigos" },
 ];
 
 async function main() {
-  console.log("Borrando invitados existentes...");
+  console.log("Deleting existing guests...");
   await prisma.guest.deleteMany({});
 
-  console.log(`Insertando ${guests.length} invitados...`);
+  console.log(`Inserting ${guests.length} guests...`);
   for (const g of guests) {
     await prisma.guest.create({
       data: {
@@ -75,7 +75,7 @@ async function main() {
     });
   }
 
-  console.log(`✓ ${guests.length} invitados insertados correctamente.`);
+  console.log(`✓ ${guests.length} guests inserted successfully.`);
 }
 
 main()

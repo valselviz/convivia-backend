@@ -16,21 +16,21 @@ export const GuestsService = {
   list: async (filters: GuestListFilters = {}): Promise<Guest[]> => {
     const { status, groupId, tableId, search, side, type, plusOne, order } = filters;
 
-    // Construir condiciones de búsqueda
+    // Build search conditions
     const searchConditions: Prisma.GuestWhereInput[] = [];
     
     if (search && search.trim()) {
       const searchTerm = search.trim();
       searchConditions.push({
         OR: [
-          // Buscar en el nombre del invitado (case-insensitive)
+          // Search in guest name (case-insensitive)
           {
             full_name: {
               contains: searchTerm,
               mode: "insensitive",
             },
           },
-          // Si es +1, buscar también en el nombre del invitado principal
+          // If +1, also search in main guest name
           {
             AND: [
               { guest_type: "PLUS_ONE" },
@@ -48,7 +48,7 @@ export const GuestsService = {
       });
     }
 
-    // Construir condiciones de filtros
+    // Build filter conditions
     const whereConditions: Prisma.GuestWhereInput = {
       ...(status ? { status } : {}),
       ...(side ? { side } : {}),
@@ -71,7 +71,7 @@ export const GuestsService = {
       ...(searchConditions.length > 0 ? { AND: searchConditions } : {}),
     };
 
-    // Determinar orden
+    // Determine sort order
     const orderBy: Prisma.GuestOrderByWithRelationInput[] = [];
     if (order === "notes") {
       orderBy.push({ notes: "asc" });
