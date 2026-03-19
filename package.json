@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "name": "wedding-backend",
+  "name": "convivia-backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.ts",

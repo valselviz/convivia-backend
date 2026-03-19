@@ -12,7 +12,7 @@ app.use(express.json());
 app.use("/static", express.static("public"));
 
 app.get("/", (req, res) => {
-  res.send("Wedding backend API");
+  res.send("Convivia backend API");
 });
 
 app.use("/guests", guestsRouter);

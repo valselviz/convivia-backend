@@ -1,6 +1,6 @@
-# Backend - Wedding Management System
+# Backend - Convivia Management System
 
-REST API for managing guests, groups, and tables for a wedding. Built with Express, Prisma, and PostgreSQL.
+REST API for managing guests, groups, and tables for a convivia. Built with Express, Prisma, and PostgreSQL.
 
 ## What does this project do?
 
@@ -27,7 +27,7 @@ npm install
 Create a `.env` file in the root with:
 
 ```env
-DATABASE_URL="postgresql://your_user:your_password@localhost:5432/wedding"
+DATABASE_URL="postgresql://your_user:your_password@localhost:5432/convivia"
 PORT=3000
 ```
 
@@ -36,12 +36,12 @@ PORT=3000
 If it doesn't exist, create it:
 
 ```bash
-createdb wedding
+createdb convivia
 ```
 
 Or from `psql`:
 ```sql
-CREATE DATABASE wedding;
+CREATE DATABASE convivia;
 ```
 
 ### 4. Apply migrations
