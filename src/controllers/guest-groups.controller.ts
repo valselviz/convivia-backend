@@ -90,7 +90,11 @@ export const GuestGroupsController = {
       }
       const payload = req.body ?? {};
       const guestIds = Array.isArray(payload.guestIds)
-        ? payload.guestIds.map(parseNumber).filter((id): id is number => id !== undefined)
+        ? payload.guestIds
+            .map(parseNumber)
+            .filter(
+              (id: number | undefined): id is number => id !== undefined,
+            )
         : [];
 
       if (guestIds.length === 0) {

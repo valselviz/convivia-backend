@@ -3,71 +3,77 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const guests = [
-  // Bride - Family
-  { full_name: "Valeria", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Mami", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Jessica", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Carla", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Dubra", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "William", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Anny", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Hendrix", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Ninoska", side: "BRIDE" as const, notes: "Familia" },
-  { full_name: "Genesis", side: "BRIDE" as const, notes: "Familia" },
-  // Bride - Friends
-  { full_name: "Caro", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Diana", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Camilo", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Miguely", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Lilia", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Zoraida", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Olga", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Astrid", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Patricia", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Oriana", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Diego", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Jhohandersonsito", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Liliana", side: "BRIDE" as const, notes: "Amigos" },
-  { full_name: "Dilia", side: "BRIDE" as const, notes: "Amigos" },
-  // Groom - Family
-  { full_name: "Alfonso", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Elena", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Andrés", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Matías", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Irai", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Mauricio", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Lucía", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Rodrigo", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Lucha", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Maria Delia", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Vicky", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Marcelo", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Santiago", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Ana Inés", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Joaquín", side: "GROOM" as const, notes: "Familia" },
-  { full_name: "Choli", side: "GROOM" as const, notes: "Familia" },
-  {
-    full_name: "Francisco (hno. de Ana)",
-    side: "GROOM" as const,
-    notes: "Familia",
-  },
-  // Groom - Friends
-  { full_name: "Rodrigo", side: "GROOM" as const, notes: "Amigos" },
-  { full_name: "Diego", side: "GROOM" as const, notes: "Amigos" },
-  { full_name: "Nico", side: "GROOM" as const, notes: "Amigos" },
+  // Hosts
+  // Host Family
+  { full_name: "Valeria", host_name: "Host A", notes: "Familia" },
+  { full_name: "Mami", host_name: "Host A", notes: "Familia" },
+  { full_name: "Jessica", host_name: "Host A", notes: "Familia" },
+  { full_name: "Carla", host_name: "Host A", notes: "Familia" },
+  { full_name: "Dubra", host_name: "Host A", notes: "Familia" },
+  { full_name: "William", host_name: "Host A", notes: "Familia" },
+  { full_name: "Anny", host_name: "Host A", notes: "Familia" },
+  { full_name: "Hendrix", host_name: "Host A", notes: "Familia" },
+  { full_name: "Ninoska", host_name: "Host A", notes: "Familia" },
+  { full_name: "Genesis", host_name: "Host A", notes: "Familia" },
+  // Host Friends
+  { full_name: "Caro", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Diana", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Camilo", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Miguely", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Lilia", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Zoraida", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Olga", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Astrid", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Patricia", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Oriana", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Diego", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Jhohandersonsito", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Liliana", host_name: "Host A", notes: "Amigos" },
+  { full_name: "Dilia", host_name: "Host A", notes: "Amigos" },
 ];
 
 async function main() {
   console.log("Deleting existing guests...");
   await prisma.guest.deleteMany({});
+  console.log("Deleting existing hosts...");
+  await prisma.host.deleteMany({});
+
+  // Create hosts first so Guest.host_id can be set.
+  const hostNames = Array.from(
+    new Set(
+      guests
+        .map((g) => (g as { host_name?: string }).host_name)
+        .filter((x): x is string => typeof x === "string" && x.trim().length > 0),
+    ),
+  );
+
+  console.log(`Creating ${hostNames.length} hosts...`);
+  for (const name of hostNames) {
+    await prisma.host.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+
+  const hostRecords = await prisma.host.findMany({
+    where: { name: { in: hostNames } },
+    select: { id: true, name: true },
+  });
+  const hostIdByName = new Map(hostRecords.map((h) => [h.name, h.id]));
 
   console.log(`Inserting ${guests.length} guests...`);
   for (const g of guests) {
+    const hostName = (g as { host_name?: string }).host_name;
+    const host_id = hostName ? hostIdByName.get(hostName) ?? null : null;
+
     await prisma.guest.create({
       data: {
         full_name: g.full_name,
         guest_type: "MAIN_GUEST",
-        side: g.side,
+        host_name: g.host_name,
+        host_id,
+        gender: "FEMALE",
         age_range: "ADULT",
         notes: g.notes,
         status: "INVITED",

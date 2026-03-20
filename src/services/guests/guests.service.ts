@@ -1,20 +1,31 @@
 import prisma from "../../client.js";
-import type { AgeRange, Gender, Guest, Prisma, Status, Side, GuestType } from "@prisma/client";
+import type { AgeRange, Gender, Guest, Prisma, Status, GuestType } from "@prisma/client";
 
 export type GuestListFilters = {
   status?: Status;
   groupId?: number;
   tableId?: number;
   search?: string;
-  side?: Side;
+  hostName?: string;
   type?: GuestType;
   plusOne?: "all" | "only";
   order?: "name" | "notes";
 };
 
+const resolveHostId = async (hostName: string | null | undefined) => {
+  if (!hostName) return null;
+  const host = await prisma.host.upsert({
+    where: { name: hostName },
+    update: {},
+    create: { name: hostName },
+  });
+  return host.id;
+};
+
 export const GuestsService = {
   list: async (filters: GuestListFilters = {}): Promise<Guest[]> => {
-    const { status, groupId, tableId, search, side, type, plusOne, order } = filters;
+    const { status, groupId, tableId, search, hostName, type, plusOne, order } =
+      filters;
 
     // Build search conditions
     const searchConditions: Prisma.GuestWhereInput[] = [];
@@ -51,7 +62,7 @@ export const GuestsService = {
     // Build filter conditions
     const whereConditions: Prisma.GuestWhereInput = {
       ...(status ? { status } : {}),
-      ...(side ? { side } : {}),
+      ...(hostName ? { host_name: hostName } : {}),
       ...(type ? { guest_type: type } : {}),
       ...(plusOne === "only" ? { guest_type: "PLUS_ONE" } : {}),
       ...(groupId
@@ -85,11 +96,13 @@ export const GuestsService = {
     });
   },
   create: async (data: Prisma.GuestUncheckedCreateInput): Promise<Guest> => {
+    const host_id = await resolveHostId(data.host_name as string | null | undefined);
     const avatar_key =
       data.avatar_key ?? getDefaultAvatarKey(data.gender, data.age_range);
     return prisma.guest.create({
       data: {
         ...data,
+        host_id,
         avatar_key,
       },
     });
@@ -98,6 +111,12 @@ export const GuestsService = {
     id: number,
     data: Prisma.GuestUncheckedUpdateInput,
   ): Promise<Guest> => {
+    const nextHostName = data.host_name as string | null | undefined;
+    const host_id =
+      nextHostName !== undefined
+        ? await resolveHostId(nextHostName)
+        : undefined;
+
     let nextAvatarKey = data.avatar_key;
     if (nextAvatarKey === null) {
       const existing = await prisma.guest.findUnique({ where: { id } });
@@ -114,6 +133,7 @@ export const GuestsService = {
       where: { id },
       data: {
         ...data,
+        ...(host_id !== undefined ? { host_id } : {}),
         ...(nextAvatarKey !== undefined ? { avatar_key: nextAvatarKey } : {}),
       },
     });

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Status, Side, GuestType } from "@prisma/client";
+import { Status, GuestType } from "@prisma/client";
 import { GuestsService } from "../services/guests/guests.service.js";
 
 const parseNumber = (value: unknown): number | undefined => {
@@ -22,16 +22,6 @@ const parseStatus = (value: unknown): Status | undefined => {
 
   return Object.values(Status).includes(value as Status)
     ? (value as Status)
-    : undefined;
-};
-
-const parseSide = (value: unknown): Side | undefined => {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  return Object.values(Side).includes(value as Side)
-    ? (value as Side)
     : undefined;
 };
 
@@ -59,7 +49,7 @@ export const GuestsController = {
       const groupId = parseNumber(req.query.groupId);
       const tableId = parseNumber(req.query.tableId);
       const search = parseString(req.query.search);
-      const side = parseSide(req.query.side);
+      const hostName = parseString(req.query.hostName);
       const type = parseGuestType(req.query.type);
       const plusOne = req.query.plusOne === "only" ? "only" : "all";
       const order = req.query.order === "notes" ? "notes" : "name";
@@ -69,7 +59,7 @@ export const GuestsController = {
         groupId,
         tableId,
         search,
-        side,
+        hostName,
         type,
         plusOne,
         order,
@@ -86,7 +76,7 @@ export const GuestsController = {
         full_name: payload.full_name,
         guest_type: payload.guest_type,
         main_guest_id: parseNumber(payload.main_guest_id),
-        side: payload.side ?? null,
+        host_name: payload.host_name ?? null,
         gender: payload.gender,
         age_range: payload.age_range,
         avatar_key: payload.avatar_key ?? null,
@@ -112,7 +102,7 @@ export const GuestsController = {
         full_name: payload.full_name,
         guest_type: payload.guest_type,
         main_guest_id: parseNumber(payload.main_guest_id),
-        side: payload.side,
+        host_name: payload.host_name,
         gender: payload.gender,
         age_range: payload.age_range,
         avatar_key: payload.avatar_key,

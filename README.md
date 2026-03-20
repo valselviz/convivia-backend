@@ -44,13 +44,14 @@ Or from `psql`:
 CREATE DATABASE convivia;
 ```
 
-### 4. Apply migrations
+### 4. Reset database to current schema
 
 ```bash
 npm run db:reset
 ```
 
-This deletes everything and recreates tables from scratch. If you already have data and just want to apply new migrations:
+This deletes everything and recreates tables from scratch using the current `schema.prisma`.
+If you already have data and just want to apply new migrations:
 
 ```bash
 npm run db:migrate
@@ -62,7 +63,7 @@ npm run db:migrate
 - `npm run build` - Compile TypeScript to JavaScript
 - `npm run start` - Run compiled version (production)
 - `npm run db:generate` - Regenerate Prisma client after changing the schema
-- `npm run db:reset` - Delete and recreate database with all migrations
+- `npm run db:reset` - Delete and recreate database from `schema.prisma`
 - `npm run db:seed` - Load sample data (guests) into the database
 
 ## Project Structure

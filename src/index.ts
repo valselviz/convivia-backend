@@ -1,7 +1,7 @@
 import cors from "cors";
 import express from "express";
 import guestsRouter from "./routes/guests.routes.js";
-import coupleRouter from "./routes/couple.routes.js";
+import hostsRouter from "./routes/hosts.routes.js";
 import guestGroupsRouter from "./routes/guest-groups.routes.js";
 import tablesRouter from "./routes/tables.routes.js";
 
@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/guests", guestsRouter);
-app.use("/couple", coupleRouter);
+app.use("/hosts", hostsRouter);
 app.use("/groups", guestGroupsRouter);
 app.use("/tables", tablesRouter);
 
