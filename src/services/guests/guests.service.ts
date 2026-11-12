@@ -1,5 +1,6 @@
 import prisma from "../../client.js";
 import type { AgeRange, Gender, Guest, Prisma, Status, GuestType } from "@prisma/client";
+import { NotFoundError } from "../../lib/errors.js";
 
 export type GuestListFilters = {
   eventId: number;
@@ -116,7 +117,7 @@ export const GuestsService = {
         where: { id: data.main_guest_id, event_id: eventId },
       });
       if (!main) {
-        throw new Error("Main guest not found in this event");
+        throw new NotFoundError("Main guest not found in this event");
       }
     }
 
@@ -149,7 +150,7 @@ export const GuestsService = {
       where: { id, event_id: eventId },
     });
     if (!existing) {
-      throw new Error("Guest not found");
+      throw new NotFoundError("Guest not found");
     }
 
     const nextMainId = data.main_guest_id as number | null | undefined;
@@ -158,7 +159,7 @@ export const GuestsService = {
         where: { id: nextMainId, event_id: eventId },
       });
       if (!main) {
-        throw new Error("Main guest not found in this event");
+        throw new NotFoundError("Main guest not found in this event");
       }
     }
 
@@ -192,7 +193,7 @@ export const GuestsService = {
   },
 };
 
-const getDefaultAvatarKey = (gender?: Gender, ageRange?: AgeRange) => {
+export const getDefaultAvatarKey = (gender?: Gender, ageRange?: AgeRange) => {
   if (!gender) return null;
   const isChild = ageRange === "CHILD" || ageRange === "BABY";
   if (gender === "FEMALE") {

@@ -5,13 +5,14 @@ import type {
   GuestRelationSource,
   Prisma,
 } from "@prisma/client";
+import { BadRequestError, NotFoundError } from "../../lib/errors.js";
 
 export type GuestRelationWithGuests = GuestRelation & {
   guest_a: { id: number; full_name: string };
   guest_b: { id: number; full_name: string };
 };
 
-const normalizePair = (
+export const normalizePair = (
   guestId1: number,
   guestId2: number,
 ): { guest_a_id: number; guest_b_id: number } =>
@@ -28,7 +29,7 @@ const assertGuestsInEvent = async (
     select: { id: true },
   });
   if (guests.length !== guestIds.length) {
-    throw new Error("One or more guests not found in this event");
+    throw new NotFoundError("One or more guests not found in this event");
   }
 };
 
@@ -60,7 +61,7 @@ export const GuestRelationsService = {
       input.guest_id_2,
     );
     if (guest_a_id === guest_b_id) {
-      throw new Error("Cannot relate a guest to themselves");
+      throw new BadRequestError("Cannot relate a guest to themselves");
     }
     await assertGuestsInEvent(eventId, [guest_a_id, guest_b_id]);
 
@@ -95,7 +96,7 @@ export const GuestRelationsService = {
       where: { id, event_id: eventId },
     });
     if (!existing) {
-      throw new Error("Relation not found");
+      throw new NotFoundError("Relation not found");
     }
     return prisma.guestRelation.update({
       where: { id },
@@ -112,7 +113,7 @@ export const GuestRelationsService = {
       where: { id, event_id: eventId },
     });
     if (result.count === 0) {
-      throw new Error("Relation not found");
+      throw new NotFoundError("Relation not found");
     }
   },
 };

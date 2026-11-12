@@ -1,5 +1,6 @@
 import prisma from "../../client.js";
 import type { TableAssignment } from "@prisma/client";
+import { BadRequestError, ConflictError, NotFoundError } from "../../lib/errors.js";
 
 export type AssignTableInput = {
   eventId: number;
@@ -18,10 +19,10 @@ export const TableAssignmentsService = {
     ]);
 
     if (!table) {
-      throw new Error("Table not found in this event");
+      throw new NotFoundError("Table not found in this event");
     }
     if (!guest) {
-      throw new Error("Guest not found in this event");
+      throw new NotFoundError("Guest not found in this event");
     }
 
     const existingAssignment = await prisma.tableAssignment.findFirst({
@@ -29,7 +30,7 @@ export const TableAssignmentsService = {
     });
 
     if (existingAssignment) {
-      throw new Error("Guest already assigned to this table");
+      throw new ConflictError("Guest already assigned to this table");
     }
 
     if (seatNumber !== undefined && seatNumber !== null) {
@@ -38,11 +39,11 @@ export const TableAssignmentsService = {
       });
 
       if (table.seats && seatNumber > table.seats) {
-        throw new Error("Seat number exceeds table capacity");
+        throw new BadRequestError("Seat number exceeds table capacity");
       }
 
       if (seatTaken) {
-        throw new Error("Seat number already taken");
+        throw new ConflictError("Seat number already taken");
       }
     }
 

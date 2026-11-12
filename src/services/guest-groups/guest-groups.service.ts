@@ -1,5 +1,6 @@
 import prisma from "../../client.js";
 import type { GuestGroup, Prisma } from "@prisma/client";
+import { NotFoundError } from "../../lib/errors.js";
 
 export type GuestGroupWithMembers = GuestGroup & {
   members: Array<{
@@ -68,7 +69,7 @@ export const GuestGroupsService = {
       where: { id, event_id: eventId },
     });
     if (!existing) {
-      throw new Error("Group not found");
+      throw new NotFoundError("Group not found");
     }
     return prisma.guestGroup.update({
       where: { id },
@@ -80,7 +81,7 @@ export const GuestGroupsService = {
       where: { id, event_id: eventId },
     });
     if (result.count === 0) {
-      throw new Error("Group not found");
+      throw new NotFoundError("Group not found");
     }
   },
   addMember: async (
@@ -91,12 +92,12 @@ export const GuestGroupsService = {
     const group = await prisma.guestGroup.findFirst({
       where: { id: groupId, event_id: eventId },
     });
-    if (!group) throw new Error("Group not found");
+    if (!group) throw new NotFoundError("Group not found");
 
     const guest = await prisma.guest.findFirst({
       where: { id: guestId, event_id: eventId },
     });
-    if (!guest) throw new Error("Guest not found in this event");
+    if (!guest) throw new NotFoundError("Guest not found in this event");
 
     const existing = await prisma.guestGroupMember.findFirst({
       where: {
@@ -122,7 +123,7 @@ export const GuestGroupsService = {
     const group = await prisma.guestGroup.findFirst({
       where: { id: groupId, event_id: eventId },
     });
-    if (!group) throw new Error("Group not found");
+    if (!group) throw new NotFoundError("Group not found");
 
     await prisma.guestGroupMember.deleteMany({
       where: {
@@ -139,14 +140,14 @@ export const GuestGroupsService = {
     const group = await prisma.guestGroup.findFirst({
       where: { id: groupId, event_id: eventId },
     });
-    if (!group) throw new Error("Group not found");
+    if (!group) throw new NotFoundError("Group not found");
 
     const guests = await prisma.guest.findMany({
       where: { id: { in: guestIds }, event_id: eventId },
       select: { id: true },
     });
     if (guests.length !== guestIds.length) {
-      throw new Error("One or more guests not found in this event");
+      throw new NotFoundError("One or more guests not found in this event");
     }
 
     const existing = await prisma.guestGroupMember.findMany({

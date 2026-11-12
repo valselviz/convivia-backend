@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import eventsRouter from "./routes/events.routes.js";
+import { errorHandler } from "./middleware/error-handler.js";
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/events", eventsRouter);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 

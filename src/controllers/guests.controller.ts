@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
-import { Status, GuestType } from "@prisma/client";
 import { GuestsService } from "../services/guests/guests.service.js";
+import {
+  createGuestSchema,
+  idParamsSchema,
+  updateGuestSchema,
+  eventIdParamsSchema,
+} from "../validation/schemas.js";
 
 const parseNumber = (value: unknown): number | undefined => {
   if (typeof value === "number") {
@@ -15,29 +20,6 @@ const parseNumber = (value: unknown): number | undefined => {
   return undefined;
 };
 
-const parseEventId = (req: Request): number | undefined =>
-  parseNumber(req.params.eventId);
-
-const parseStatus = (value: unknown): Status | undefined => {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  return Object.values(Status).includes(value as Status)
-    ? (value as Status)
-    : undefined;
-};
-
-const parseGuestType = (value: unknown): GuestType | undefined => {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  return Object.values(GuestType).includes(value as GuestType)
-    ? (value as GuestType)
-    : undefined;
-};
-
 const parseString = (value: unknown): string | undefined => {
   if (typeof value === "string" && value.trim()) {
     return value.trim();
@@ -47,119 +29,82 @@ const parseString = (value: unknown): string | undefined => {
 
 export const GuestsController = {
   list: async (req: Request, res: Response) => {
-    try {
-      const eventId = parseEventId(req);
-      if (!eventId) {
-        res.status(400).json({ error: "Invalid event id" });
-        return;
-      }
+    const { eventId } = eventIdParamsSchema.parse(req.params);
 
-      const status = parseStatus(req.query.status);
-      const groupId = parseNumber(req.query.groupId);
-      const tableId = parseNumber(req.query.tableId);
-      const search = parseString(req.query.search);
-      const hostName = parseString(req.query.hostName);
-      const type = parseGuestType(req.query.type);
-      const plusOne = req.query.plusOne === "only" ? "only" : "all";
-      const order = req.query.order === "notes" ? "notes" : "name";
+    const statusRaw = req.query.status;
+    const status =
+      typeof statusRaw === "string" &&
+      ["INVITED", "CONFIRMED", "DECLINED"].includes(statusRaw)
+        ? (statusRaw as "INVITED" | "CONFIRMED" | "DECLINED")
+        : undefined;
+    const groupId = parseNumber(req.query.groupId);
+    const tableId = parseNumber(req.query.tableId);
+    const search = parseString(req.query.search);
+    const hostName = parseString(req.query.hostName);
+    const typeRaw = req.query.type;
+    const type =
+      typeof typeRaw === "string" &&
+      ["MAIN_GUEST", "PLUS_ONE"].includes(typeRaw)
+        ? (typeRaw as "MAIN_GUEST" | "PLUS_ONE")
+        : undefined;
+    const plusOne = req.query.plusOne === "only" ? "only" : "all";
+    const order = req.query.order === "notes" ? "notes" : "name";
 
-      const guests = await GuestsService.list({
-        eventId,
-        status,
-        groupId,
-        tableId,
-        search,
-        hostName,
-        type,
-        plusOne,
-        order,
-      });
-      res.json(guests);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to list guests" });
-    }
+    const guests = await GuestsService.list({
+      eventId,
+      status,
+      groupId,
+      tableId,
+      search,
+      hostName,
+      type,
+      plusOne,
+      order,
+    });
+    res.json(guests);
   },
+
   create: async (req: Request, res: Response) => {
-    try {
-      const eventId = parseEventId(req);
-      if (!eventId) {
-        res.status(400).json({ error: "Invalid event id" });
-        return;
-      }
+    const { eventId } = eventIdParamsSchema.parse(req.params);
+    const payload = createGuestSchema.parse(req.body);
 
-      const payload = req.body ?? {};
-      const guest = await GuestsService.create(eventId, {
-        full_name: payload.full_name,
-        guest_type: payload.guest_type,
-        main_guest_id: parseNumber(payload.main_guest_id),
-        host_name: payload.host_name ?? null,
-        gender: payload.gender,
-        age_range: payload.age_range,
-        avatar_key: payload.avatar_key ?? null,
-        notes: payload.notes ?? null,
-        status: payload.status,
-      });
+    const guest = await GuestsService.create(eventId, {
+      full_name: payload.full_name,
+      guest_type: payload.guest_type,
+      main_guest_id: payload.main_guest_id ?? undefined,
+      host_name: payload.host_name ?? null,
+      gender: payload.gender,
+      age_range: payload.age_range,
+      avatar_key: payload.avatar_key ?? null,
+      notes: payload.notes ?? null,
+      status: payload.status,
+    });
 
-      res.status(201).json(guest);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to create guest";
-      res.status(400).json({ error: message });
-    }
+    res.status(201).json(guest);
   },
+
   update: async (req: Request, res: Response) => {
-    try {
-      const eventId = parseEventId(req);
-      if (!eventId) {
-        res.status(400).json({ error: "Invalid event id" });
-        return;
-      }
+    const { eventId, id } = idParamsSchema.parse(req.params);
+    const payload = updateGuestSchema.parse(req.body);
 
-      const id = parseNumber(req.params.id);
-      if (!id) {
-        res.status(400).json({ error: "Invalid guest id" });
-        return;
-      }
+    const guest = await GuestsService.update(eventId, id, {
+      full_name: payload.full_name,
+      guest_type: payload.guest_type,
+      main_guest_id: payload.main_guest_id,
+      host_name: payload.host_name,
+      gender: payload.gender,
+      age_range: payload.age_range,
+      avatar_key: payload.avatar_key,
+      notes: payload.notes,
+      status: payload.status,
+    });
 
-      const payload = req.body ?? {};
-      const guest = await GuestsService.update(eventId, id, {
-        full_name: payload.full_name,
-        guest_type: payload.guest_type,
-        main_guest_id: parseNumber(payload.main_guest_id),
-        host_name: payload.host_name,
-        gender: payload.gender,
-        age_range: payload.age_range,
-        avatar_key: payload.avatar_key,
-        notes: payload.notes,
-        status: payload.status,
-      });
-
-      res.json(guest);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update guest";
-      const status = message === "Guest not found" ? 404 : 400;
-      res.status(status).json({ error: message });
-    }
+    res.json(guest);
   },
+
   delete: async (req: Request, res: Response) => {
-    try {
-      const eventId = parseEventId(req);
-      if (!eventId) {
-        res.status(400).json({ error: "Invalid event id" });
-        return;
-      }
-
-      const id = parseNumber(req.params.id);
-      if (!id) {
-        res.status(400).json({ error: "Invalid guest id" });
-        return;
-      }
-
-      await GuestsService.delete(eventId, [id]);
-      res.status(204).send();
-    } catch (error) {
-      res.status(400).json({ error: "Failed to delete guest" });
-    }
+    const { eventId, id } = idParamsSchema.parse(req.params);
+    await GuestsService.delete(eventId, [id]);
+    res.status(204).send();
   },
 };
