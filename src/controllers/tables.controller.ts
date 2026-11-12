@@ -15,10 +15,18 @@ const parseNumber = (value: unknown): number | undefined => {
   return undefined;
 };
 
+const parseEventId = (req: Request): number | undefined =>
+  parseNumber(req.params.eventId);
+
 export const TablesController = {
-  list: async (_req: Request, res: Response) => {
+  list: async (req: Request, res: Response) => {
     try {
-      const tables = await TablesService.list();
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
+      const tables = await TablesService.list(eventId);
       res.json(tables);
     } catch (error) {
       res.status(500).json({ error: "Failed to list tables" });
@@ -26,8 +34,13 @@ export const TablesController = {
   },
   create: async (req: Request, res: Response) => {
     try {
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
       const payload = req.body ?? {};
-      const table = await TablesService.create({
+      const table = await TablesService.create(eventId, {
         name: payload.name,
         shape: payload.shape ?? null,
         seats: payload.seats,
@@ -41,6 +54,12 @@ export const TablesController = {
   },
   assignGuest: async (req: Request, res: Response) => {
     try {
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
+
       const tableId = parseNumber(req.params.id);
       if (!tableId) {
         res.status(400).json({ error: "Invalid table id" });
@@ -55,6 +74,7 @@ export const TablesController = {
       }
 
       const assignment = await TableAssignmentsService.assign({
+        eventId,
         tableId,
         guestId,
         seatNumber: parseNumber(payload.seat_number) ?? null,

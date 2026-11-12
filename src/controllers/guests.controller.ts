@@ -15,6 +15,9 @@ const parseNumber = (value: unknown): number | undefined => {
   return undefined;
 };
 
+const parseEventId = (req: Request): number | undefined =>
+  parseNumber(req.params.eventId);
+
 const parseStatus = (value: unknown): Status | undefined => {
   if (typeof value !== "string") {
     return undefined;
@@ -45,6 +48,12 @@ const parseString = (value: unknown): string | undefined => {
 export const GuestsController = {
   list: async (req: Request, res: Response) => {
     try {
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
+
       const status = parseStatus(req.query.status);
       const groupId = parseNumber(req.query.groupId);
       const tableId = parseNumber(req.query.tableId);
@@ -55,6 +64,7 @@ export const GuestsController = {
       const order = req.query.order === "notes" ? "notes" : "name";
 
       const guests = await GuestsService.list({
+        eventId,
         status,
         groupId,
         tableId,
@@ -71,8 +81,14 @@ export const GuestsController = {
   },
   create: async (req: Request, res: Response) => {
     try {
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
+
       const payload = req.body ?? {};
-      const guest = await GuestsService.create({
+      const guest = await GuestsService.create(eventId, {
         full_name: payload.full_name,
         guest_type: payload.guest_type,
         main_guest_id: parseNumber(payload.main_guest_id),
@@ -86,11 +102,19 @@ export const GuestsController = {
 
       res.status(201).json(guest);
     } catch (error) {
-      res.status(400).json({ error: "Failed to create guest" });
+      const message =
+        error instanceof Error ? error.message : "Failed to create guest";
+      res.status(400).json({ error: message });
     }
   },
   update: async (req: Request, res: Response) => {
     try {
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
+
       const id = parseNumber(req.params.id);
       if (!id) {
         res.status(400).json({ error: "Invalid guest id" });
@@ -98,7 +122,7 @@ export const GuestsController = {
       }
 
       const payload = req.body ?? {};
-      const guest = await GuestsService.update(id, {
+      const guest = await GuestsService.update(eventId, id, {
         full_name: payload.full_name,
         guest_type: payload.guest_type,
         main_guest_id: parseNumber(payload.main_guest_id),
@@ -112,18 +136,27 @@ export const GuestsController = {
 
       res.json(guest);
     } catch (error) {
-      res.status(400).json({ error: "Failed to update guest" });
+      const message =
+        error instanceof Error ? error.message : "Failed to update guest";
+      const status = message === "Guest not found" ? 404 : 400;
+      res.status(status).json({ error: message });
     }
   },
   delete: async (req: Request, res: Response) => {
     try {
+      const eventId = parseEventId(req);
+      if (!eventId) {
+        res.status(400).json({ error: "Invalid event id" });
+        return;
+      }
+
       const id = parseNumber(req.params.id);
       if (!id) {
         res.status(400).json({ error: "Invalid guest id" });
         return;
       }
 
-      await GuestsService.delete([id]);
+      await GuestsService.delete(eventId, [id]);
       res.status(204).send();
     } catch (error) {
       res.status(400).json({ error: "Failed to delete guest" });

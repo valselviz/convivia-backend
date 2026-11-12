@@ -2,6 +2,7 @@ import prisma from "../../client.js";
 import type { AgeRange, Gender, Guest, Prisma, Status, GuestType } from "@prisma/client";
 
 export type GuestListFilters = {
+  eventId: number;
   status?: Status;
   groupId?: number;
   tableId?: number;
@@ -12,36 +13,47 @@ export type GuestListFilters = {
   order?: "name" | "notes";
 };
 
-const resolveHostId = async (hostName: string | null | undefined) => {
+const resolveHostId = async (
+  eventId: number,
+  hostName: string | null | undefined,
+): Promise<number | null> => {
   if (!hostName) return null;
   const host = await prisma.host.upsert({
-    where: { name: hostName },
+    where: {
+      event_id_name: { event_id: eventId, name: hostName },
+    },
     update: {},
-    create: { name: hostName },
+    create: { event_id: eventId, name: hostName },
   });
   return host.id;
 };
 
 export const GuestsService = {
-  list: async (filters: GuestListFilters = {}): Promise<Guest[]> => {
-    const { status, groupId, tableId, search, hostName, type, plusOne, order } =
-      filters;
+  list: async (filters: GuestListFilters): Promise<Guest[]> => {
+    const {
+      eventId,
+      status,
+      groupId,
+      tableId,
+      search,
+      hostName,
+      type,
+      plusOne,
+      order,
+    } = filters;
 
-    // Build search conditions
     const searchConditions: Prisma.GuestWhereInput[] = [];
-    
+
     if (search && search.trim()) {
       const searchTerm = search.trim();
       searchConditions.push({
         OR: [
-          // Search in guest name (case-insensitive)
           {
             full_name: {
               contains: searchTerm,
               mode: "insensitive",
             },
           },
-          // If +1, also search in main guest name
           {
             AND: [
               { guest_type: "PLUS_ONE" },
@@ -59,8 +71,8 @@ export const GuestsService = {
       });
     }
 
-    // Build filter conditions
     const whereConditions: Prisma.GuestWhereInput = {
+      event_id: eventId,
       ...(status ? { status } : {}),
       ...(hostName ? { host_name: hostName } : {}),
       ...(type ? { guest_type: type } : {}),
@@ -82,7 +94,6 @@ export const GuestsService = {
       ...(searchConditions.length > 0 ? { AND: searchConditions } : {}),
     };
 
-    // Determine sort order
     const orderBy: Prisma.GuestOrderByWithRelationInput[] = [];
     if (order === "notes") {
       orderBy.push({ notes: "asc" });
@@ -95,38 +106,73 @@ export const GuestsService = {
       orderBy,
     });
   },
-  create: async (data: Prisma.GuestUncheckedCreateInput): Promise<Guest> => {
-    const host_id = await resolveHostId(data.host_name as string | null | undefined);
+
+  create: async (
+    eventId: number,
+    data: Omit<Prisma.GuestUncheckedCreateInput, "event_id">,
+  ): Promise<Guest> => {
+    if (data.main_guest_id) {
+      const main = await prisma.guest.findFirst({
+        where: { id: data.main_guest_id, event_id: eventId },
+      });
+      if (!main) {
+        throw new Error("Main guest not found in this event");
+      }
+    }
+
+    const host_id = await resolveHostId(
+      eventId,
+      data.host_name as string | null | undefined,
+    );
     const avatar_key =
-      data.avatar_key ?? getDefaultAvatarKey(data.gender, data.age_range);
+      (data.avatar_key as string | null | undefined) ??
+      getDefaultAvatarKey(
+        data.gender as Gender | undefined,
+        data.age_range as AgeRange | undefined,
+      );
     return prisma.guest.create({
       data: {
         ...data,
+        event_id: eventId,
         host_id,
         avatar_key,
       },
     });
   },
+
   update: async (
+    eventId: number,
     id: number,
     data: Prisma.GuestUncheckedUpdateInput,
   ): Promise<Guest> => {
+    const existing = await prisma.guest.findFirst({
+      where: { id, event_id: eventId },
+    });
+    if (!existing) {
+      throw new Error("Guest not found");
+    }
+
+    const nextMainId = data.main_guest_id as number | null | undefined;
+    if (nextMainId !== undefined && nextMainId !== null) {
+      const main = await prisma.guest.findFirst({
+        where: { id: nextMainId, event_id: eventId },
+      });
+      if (!main) {
+        throw new Error("Main guest not found in this event");
+      }
+    }
+
     const nextHostName = data.host_name as string | null | undefined;
     const host_id =
       nextHostName !== undefined
-        ? await resolveHostId(nextHostName)
+        ? await resolveHostId(eventId, nextHostName)
         : undefined;
 
     let nextAvatarKey = data.avatar_key;
     if (nextAvatarKey === null) {
-      const existing = await prisma.guest.findUnique({ where: { id } });
-      if (existing) {
-        const gender = (data.gender ?? existing.gender) as Gender;
-        const age_range = (data.age_range ?? existing.age_range) as AgeRange;
-        nextAvatarKey = getDefaultAvatarKey(gender, age_range);
-      } else {
-        nextAvatarKey = undefined;
-      }
+      const gender = (data.gender ?? existing.gender) as Gender;
+      const age_range = (data.age_range ?? existing.age_range) as AgeRange;
+      nextAvatarKey = getDefaultAvatarKey(gender, age_range);
     }
 
     return prisma.guest.update({
@@ -138,11 +184,11 @@ export const GuestsService = {
       },
     });
   },
-  remove: async (id: number): Promise<void> => {
-    await prisma.guest.delete({ where: { id } });
-  },
-  delete: async (ids: number[]): Promise<void> => {
-    await prisma.guest.deleteMany({ where: { id: { in: ids } } });
+
+  delete: async (eventId: number, ids: number[]): Promise<void> => {
+    await prisma.guest.deleteMany({
+      where: { id: { in: ids }, event_id: eventId },
+    });
   },
 };
 

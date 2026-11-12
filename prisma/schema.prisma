@@ -7,15 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Event {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  guests    Guest[]
+  hosts     Host[]
+  groups    GuestGroup[]
+  tables    Table[]
+  relations GuestRelation[]
+}
+
 model Guest {
   id                Int                @id @default(autoincrement())
+  event_id          Int
+  event             Event              @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   full_name         String             @db.VarChar(100)
   guest_type        GuestType
   main_guest_id     Int?
   main_guest        Guest?             @relation("MainGuest", fields: [main_guest_id], references: [id], onUpdate: NoAction)
-  host_name         String?           @db.VarChar(100)
+  host_name         String?            @db.VarChar(100)
   host_id           Int?
-  host              Host?             @relation(fields: [host_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  host              Host?              @relation(fields: [host_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   gender            Gender
   age_range         AgeRange           @default(ADULT)
   avatar_key        String?            @db.VarChar(50)
@@ -24,13 +39,21 @@ model Guest {
   table_assignments TableAssignment[]
   group_members     GuestGroupMember[]
   other_guests      Guest[]            @relation("MainGuest")
+  relations_as_a    GuestRelation[]    @relation("GuestRelationA")
+  relations_as_b    GuestRelation[]    @relation("GuestRelationB")
+
+  @@index([event_id])
 }
 
 model GuestGroup {
   id        Int                @id @default(autoincrement())
+  event_id  Int
+  event     Event              @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   name      String             @db.VarChar(100)
   category  String?            @db.VarChar(50)
   members   GuestGroupMember[]
+
+  @@index([event_id])
 }
 
 model GuestGroupMember {
@@ -41,13 +64,34 @@ model GuestGroupMember {
   group_id Int
 }
 
+model GuestRelation {
+  id         Int                 @id @default(autoincrement())
+  event_id   Int
+  event      Event               @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  guest_a_id Int
+  guest_b_id Int
+  guest_a    Guest               @relation("GuestRelationA", fields: [guest_a_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  guest_b    Guest               @relation("GuestRelationB", fields: [guest_b_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  kind       GuestRelationKind
+  strength   Int                 @default(3)
+  source     GuestRelationSource @default(USER)
+  notes      String?             @db.VarChar(500)
+
+  @@unique([guest_a_id, guest_b_id, kind])
+  @@index([event_id])
+}
+
 model Table {
   id          Int               @id @default(autoincrement())
+  event_id    Int
+  event       Event             @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   name        String            @db.VarChar(50)
   shape       Shape?
   seats       Int
   category    String?           @db.VarChar(50)
   assignments TableAssignment[]
+
+  @@index([event_id])
 }
 
 model TableAssignment {
@@ -86,11 +130,29 @@ enum Shape {
   rectangular
 }
 
+enum GuestRelationKind {
+  AFFINITY
+  FAMILY
+  SOCIAL
+  CONFLICT
+}
+
+enum GuestRelationSource {
+  USER
+  IMPORT
+  AI_SUGGESTION
+}
+
 model Host {
   id         Int      @id @default(autoincrement())
-  name       String   @unique @db.VarChar(100)
+  event_id   Int
+  event      Event    @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  name       String   @db.VarChar(100)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   guests Guest[]
+
+  @@unique([event_id, name])
+  @@index([event_id])
 }

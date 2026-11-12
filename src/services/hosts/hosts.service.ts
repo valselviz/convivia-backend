@@ -12,30 +12,35 @@ const normalizeNames = (names: unknown): string[] => {
 };
 
 export const HostsService = {
-  list: async (): Promise<HostDTO[]> => {
+  list: async (eventId: number): Promise<HostDTO[]> => {
     return prisma.host.findMany({
+      where: { event_id: eventId },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     });
   },
 
-  // Replace hosts set. Guests pointing to deleted hosts will be unassigned.
-  replace: async (namesInput: unknown): Promise<HostDTO[]> => {
+  replace: async (
+    eventId: number,
+    namesInput: unknown,
+  ): Promise<HostDTO[]> => {
     const names = normalizeNames(namesInput);
 
-    // Create/ensure hosts
     for (const name of names) {
       await prisma.host.upsert({
-        where: { name },
+        where: {
+          event_id_name: { event_id: eventId, name },
+        },
         update: {},
-        create: { name },
+        create: { event_id: eventId, name },
       });
     }
 
-    // Delete hosts not present in the new set.
-    // Before deleting, nullify guest host_name/host_id so filtering and UI stay consistent.
     const hostsToDelete = await prisma.host.findMany({
-      where: names.length ? { name: { notIn: names } } : {},
+      where:
+        names.length > 0
+          ? { event_id: eventId, name: { notIn: names } }
+          : { event_id: eventId },
       select: { id: true, name: true },
     });
 
@@ -44,6 +49,7 @@ export const HostsService = {
       const namesToDelete = hostsToDelete.map((h) => h.name);
       await prisma.guest.updateMany({
         where: {
+          event_id: eventId,
           OR: [{ host_id: { in: ids } }, { host_name: { in: namesToDelete } }],
         },
         data: { host_name: null, host_id: null },
@@ -51,7 +57,6 @@ export const HostsService = {
       await prisma.host.deleteMany({ where: { id: { in: ids } } });
     }
 
-    return HostsService.list();
+    return HostsService.list(eventId);
   },
 };
-

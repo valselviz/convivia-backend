@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { GuestGroupsController } from "../controllers/guest-groups.controller.js";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.get("/", GuestGroupsController.list);
 router.get("/:id", GuestGroupsController.getById);

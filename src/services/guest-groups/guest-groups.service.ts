@@ -13,8 +13,9 @@ export type GuestGroupWithMembers = GuestGroup & {
 };
 
 export const GuestGroupsService = {
-  list: async (): Promise<GuestGroup[]> => {
+  list: async (eventId: number): Promise<GuestGroup[]> => {
     return prisma.guestGroup.findMany({
+      where: { event_id: eventId },
       orderBy: { id: "asc" },
       include: {
         members: {
@@ -26,9 +27,12 @@ export const GuestGroupsService = {
       },
     });
   },
-  getById: async (id: number): Promise<GuestGroupWithMembers | null> => {
-    return prisma.guestGroup.findUnique({
-      where: { id },
+  getById: async (
+    eventId: number,
+    id: number,
+  ): Promise<GuestGroupWithMembers | null> => {
+    return prisma.guestGroup.findFirst({
+      where: { id, event_id: eventId },
       include: {
         members: {
           include: {
@@ -45,24 +49,55 @@ export const GuestGroupsService = {
     });
   },
   create: async (
-    data: Prisma.GuestGroupUncheckedCreateInput,
+    eventId: number,
+    data: Omit<Prisma.GuestGroupUncheckedCreateInput, "event_id">,
   ): Promise<GuestGroup> => {
-    return prisma.guestGroup.create({ data });
+    return prisma.guestGroup.create({
+      data: {
+        ...data,
+        event_id: eventId,
+      },
+    });
   },
   update: async (
+    eventId: number,
     id: number,
     data: Prisma.GuestGroupUncheckedUpdateInput,
   ): Promise<GuestGroup> => {
+    const existing = await prisma.guestGroup.findFirst({
+      where: { id, event_id: eventId },
+    });
+    if (!existing) {
+      throw new Error("Group not found");
+    }
     return prisma.guestGroup.update({
       where: { id },
       data,
     });
   },
-  delete: async (id: number): Promise<void> => {
-    await prisma.guestGroup.delete({ where: { id } });
+  delete: async (eventId: number, id: number): Promise<void> => {
+    const result = await prisma.guestGroup.deleteMany({
+      where: { id, event_id: eventId },
+    });
+    if (result.count === 0) {
+      throw new Error("Group not found");
+    }
   },
-  addMember: async (groupId: number, guestId: number): Promise<void> => {
-    // Check if it already exists
+  addMember: async (
+    eventId: number,
+    groupId: number,
+    guestId: number,
+  ): Promise<void> => {
+    const group = await prisma.guestGroup.findFirst({
+      where: { id: groupId, event_id: eventId },
+    });
+    if (!group) throw new Error("Group not found");
+
+    const guest = await prisma.guest.findFirst({
+      where: { id: guestId, event_id: eventId },
+    });
+    if (!guest) throw new Error("Guest not found in this event");
+
     const existing = await prisma.guestGroupMember.findFirst({
       where: {
         group_id: groupId,
@@ -79,7 +114,16 @@ export const GuestGroupsService = {
       });
     }
   },
-  removeMember: async (groupId: number, guestId: number): Promise<void> => {
+  removeMember: async (
+    eventId: number,
+    groupId: number,
+    guestId: number,
+  ): Promise<void> => {
+    const group = await prisma.guestGroup.findFirst({
+      where: { id: groupId, event_id: eventId },
+    });
+    if (!group) throw new Error("Group not found");
+
     await prisma.guestGroupMember.deleteMany({
       where: {
         group_id: groupId,
@@ -88,10 +132,23 @@ export const GuestGroupsService = {
     });
   },
   addMembers: async (
+    eventId: number,
     groupId: number,
     guestIds: number[],
   ): Promise<void> => {
-    // Get existing members to avoid duplicates
+    const group = await prisma.guestGroup.findFirst({
+      where: { id: groupId, event_id: eventId },
+    });
+    if (!group) throw new Error("Group not found");
+
+    const guests = await prisma.guest.findMany({
+      where: { id: { in: guestIds }, event_id: eventId },
+      select: { id: true },
+    });
+    if (guests.length !== guestIds.length) {
+      throw new Error("One or more guests not found in this event");
+    }
+
     const existing = await prisma.guestGroupMember.findMany({
       where: {
         group_id: groupId,

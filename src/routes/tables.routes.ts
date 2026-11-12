@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { TablesController } from "../controllers/tables.controller.js";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.get("/", TablesController.list);
 router.post("/", TablesController.create);

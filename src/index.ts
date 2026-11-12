@@ -1,9 +1,6 @@
 import cors from "cors";
 import express from "express";
-import guestsRouter from "./routes/guests.routes.js";
-import hostsRouter from "./routes/hosts.routes.js";
-import guestGroupsRouter from "./routes/guest-groups.routes.js";
-import tablesRouter from "./routes/tables.routes.js";
+import eventsRouter from "./routes/events.routes.js";
 
 const app = express();
 
@@ -15,12 +12,9 @@ app.get("/", (req, res) => {
   res.send("Convivia backend API");
 });
 
-app.use("/guests", guestsRouter);
-app.use("/hosts", hostsRouter);
-app.use("/groups", guestGroupsRouter);
-app.use("/tables", tablesRouter);
+app.use("/events", eventsRouter);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
