@@ -16,6 +16,8 @@
     "forceConsistentCasingInFileNames": true
   },
 
+  "exclude": ["node_modules", "dist", "**/*.test.ts"],
+
   // Required by ts-node for ESM
   "ts-node": {
     "esm": true
