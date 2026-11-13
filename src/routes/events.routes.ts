@@ -6,6 +6,7 @@ import guestGroupsRouter from "./guest-groups.routes.js";
 import tablesRouter from "./tables.routes.js";
 import guestRelationsRouter from "./guest-relations.routes.js";
 import tableAssignmentsRouter from "./table-assignments.routes.js";
+import seatingRouter from "./seating.routes.js";
 
 const eventScoped = Router({ mergeParams: true });
 
@@ -19,6 +20,7 @@ eventScoped.use("/groups", guestGroupsRouter);
 eventScoped.use("/tables", tablesRouter);
 eventScoped.use("/relations", guestRelationsRouter);
 eventScoped.use("/assignments", tableAssignmentsRouter);
+eventScoped.use("/seating", seatingRouter);
 
 const eventsRouter = Router();
 eventsRouter.get("/", EventsController.list);

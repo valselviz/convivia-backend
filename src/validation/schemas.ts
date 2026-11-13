@@ -132,6 +132,31 @@ export const setLockedSchema = z.object({
   locked: z.boolean(),
 });
 
+// --- seating ---
+
+export const weightLevelSchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+
+export const seatingWeightsSchema = z.object({
+  host: z.object({
+    mode: z.enum(["separate", "indifferent", "mixed"]),
+    weight: weightLevelSchema,
+  }),
+  family: weightLevelSchema,
+  affinity: weightLevelSchema,
+  groups: weightLevelSchema,
+  age: weightLevelSchema,
+});
+
+export const autoAssignSchema = z.object({
+  weights: seatingWeightsSchema,
+  seed: z.coerce.number().int().optional(),
+});
+
 // --- events ---
 
 export const createEventSchema = z.object({

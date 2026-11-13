@@ -12,6 +12,9 @@ vi.mock("../../client.js", () => ({
     host: {
       upsert: vi.fn(),
     },
+    tableAssignment: {
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
@@ -111,5 +114,55 @@ describe("GuestsService.update", () => {
     await expect(
       GuestsService.update(1, 5, { main_guest_id: 999 }),
     ).rejects.toThrow("Main guest not found in this event");
+  });
+
+  it("frees the guest's table seat when they transition to DECLINED", async () => {
+    mockedPrisma.guest.findFirst.mockResolvedValue({
+      id: 5,
+      guest_type: "PLUS_ONE",
+      status: "CONFIRMED",
+      gender: "FEMALE",
+      age_range: "ADULT",
+    } as never);
+    mockedPrisma.guest.update.mockResolvedValue({ id: 5 } as never);
+
+    await GuestsService.update(1, 5, { status: "DECLINED" });
+
+    expect(mockedPrisma.tableAssignment.deleteMany).toHaveBeenCalledWith({
+      where: { guest_id: { in: [5] } },
+    });
+  });
+
+  it("also frees the plus-one's seat when a main guest declines", async () => {
+    mockedPrisma.guest.findFirst.mockResolvedValue({
+      id: 1,
+      guest_type: "MAIN_GUEST",
+      status: "CONFIRMED",
+      gender: "FEMALE",
+      age_range: "ADULT",
+    } as never);
+    mockedPrisma.guest.update.mockResolvedValue({ id: 1 } as never);
+    mockedPrisma.guest.findMany.mockResolvedValue([{ id: 2 }] as never);
+
+    await GuestsService.update(1, 1, { status: "DECLINED" });
+
+    expect(mockedPrisma.tableAssignment.deleteMany).toHaveBeenCalledWith({
+      where: { guest_id: { in: [1, 2] } },
+    });
+  });
+
+  it("does not touch table assignments when the status change isn't a new decline", async () => {
+    mockedPrisma.guest.findFirst.mockResolvedValue({
+      id: 5,
+      guest_type: "MAIN_GUEST",
+      status: "DECLINED",
+      gender: "FEMALE",
+      age_range: "ADULT",
+    } as never);
+    mockedPrisma.guest.update.mockResolvedValue({ id: 5 } as never);
+
+    await GuestsService.update(1, 5, { status: "DECLINED" });
+
+    expect(mockedPrisma.tableAssignment.deleteMany).not.toHaveBeenCalled();
   });
 });

@@ -176,7 +176,7 @@ export const GuestsService = {
       nextAvatarKey = getDefaultAvatarKey(gender, age_range);
     }
 
-    return prisma.guest.update({
+    const updated = await prisma.guest.update({
       where: { id },
       data: {
         ...data,
@@ -184,6 +184,22 @@ export const GuestsService = {
         ...(nextAvatarKey !== undefined ? { avatar_key: nextAvatarKey } : {}),
       },
     });
+
+    if (data.status === "DECLINED" && existing.status !== "DECLINED") {
+      const idsToRelease = [id];
+      if (existing.guest_type === "MAIN_GUEST") {
+        const plusOnes = await prisma.guest.findMany({
+          where: { main_guest_id: id },
+          select: { id: true },
+        });
+        idsToRelease.push(...plusOnes.map((p) => p.id));
+      }
+      await prisma.tableAssignment.deleteMany({
+        where: { guest_id: { in: idsToRelease } },
+      });
+    }
+
+    return updated;
   },
 
   delete: async (eventId: number, ids: number[]): Promise<void> => {
