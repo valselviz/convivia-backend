@@ -1,7 +1,12 @@
 import prisma from "../../client.js";
 import type { Prisma, Table } from "@prisma/client";
 import { BadRequestError, ConflictError, NotFoundError } from "../../lib/errors.js";
-import { findConflict, type PlacedTable } from "../../lib/geometry.js";
+import {
+  findConflict,
+  isWithinRoom,
+  toEffectiveFootprint,
+  type PlacedTable,
+} from "../../lib/geometry.js";
 
 const assertValidCapacity = (
   seats: number | undefined,
@@ -24,22 +29,41 @@ const toPlacedTable = (table: Table): PlacedTable | null => {
   };
 };
 
-const assertNoConflict = async (
+const assertValidPlacement = async (
   eventId: number,
   candidate: PlacedTable,
 ): Promise<void> => {
-  const others = await prisma.table.findMany({
-    where: { event_id: eventId, id: { not: candidate.id } },
-  });
+  const [others, event] = await Promise.all([
+    prisma.table.findMany({
+      where: { event_id: eventId, id: { not: candidate.id } },
+    }),
+    prisma.event.findUnique({ where: { id: eventId } }),
+  ]);
+
+  const effectiveCandidate = toEffectiveFootprint(candidate);
+
+  if (
+    event &&
+    !isWithinRoom(effectiveCandidate, {
+      width: event.room_width_m,
+      height: event.room_height_m,
+    })
+  ) {
+    throw new BadRequestError(
+      "Table (including its seats) does not fit within the room boundaries",
+    );
+  }
+
   const placedOthers = others
     .map(toPlacedTable)
-    .filter((t): t is PlacedTable => t !== null);
+    .filter((t): t is PlacedTable => t !== null)
+    .map(toEffectiveFootprint);
 
-  const conflict = findConflict(candidate, placedOthers);
+  const conflict = findConflict(effectiveCandidate, placedOthers);
   if (conflict) {
     const conflictingTable = others.find((t) => t.id === conflict.id);
     throw new ConflictError(
-      `Table overlaps or is too close to "${conflictingTable?.name ?? "another table"}" (minimum 1m gap required)`,
+      `Table overlaps or is too close to "${conflictingTable?.name ?? "another table"}" (minimum 1m gap required, including seats)`,
     );
   }
 };
@@ -59,7 +83,7 @@ export const TablesService = {
     assertValidCapacity(data.seats as number, data.min_seats as number | null | undefined);
 
     if (data.pos_x != null && data.pos_y != null) {
-      await assertNoConflict(eventId, {
+      await assertValidPlacement(eventId, {
         shape: data.shape as PlacedTable["shape"],
         pos_x: data.pos_x as number,
         pos_y: data.pos_y as number,
@@ -105,7 +129,7 @@ export const TablesService = {
     };
 
     if (!Number.isNaN(merged.pos_x) && !Number.isNaN(merged.pos_y)) {
-      await assertNoConflict(eventId, merged);
+      await assertValidPlacement(eventId, merged);
     }
 
     return prisma.table.update({

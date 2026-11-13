@@ -14,6 +14,10 @@ export const guestIdParamsSchema = idParamsSchema.extend({
   guestId: z.coerce.number().int().positive(),
 });
 
+export const eventGuestParamsSchema = eventIdParamsSchema.extend({
+  guestId: z.coerce.number().int().positive(),
+});
+
 // --- guests ---
 
 export const guestTypeSchema = z.enum(["MAIN_GUEST", "PLUS_ONE"]);
@@ -116,6 +120,16 @@ export const updateTableSchema = z.object({
 export const assignGuestSchema = z.object({
   guest_id: z.coerce.number().int().positive(),
   seat_number: z.coerce.number().int().positive().optional().nullable(),
+});
+
+export const reassignSchema = z.object({
+  guest_id: z.coerce.number().int().positive(),
+  table_id: z.coerce.number().int().positive(),
+  seat_number: z.coerce.number().int().positive().optional().nullable(),
+});
+
+export const setLockedSchema = z.object({
+  locked: z.boolean(),
 });
 
 // --- events ---

@@ -9,6 +9,9 @@ vi.mock("../../client.js", () => ({
       update: vi.fn(),
       deleteMany: vi.fn(),
     },
+    event: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -175,6 +178,61 @@ describe("TablesService.update", () => {
     await TablesService.update(1, 1, { pos_x: 10, pos_y: 10 });
 
     expect(mockedPrisma.table.update).toHaveBeenCalled();
+  });
+
+  it("throws BadRequestError when the table (with its seats) would poke outside the room", async () => {
+    mockedPrisma.table.findFirst.mockResolvedValue({
+      id: 1,
+      shape: "redonda",
+      pos_x: null,
+      pos_y: null,
+      width: 1.5,
+      height: 1.5,
+    } as never);
+    mockedPrisma.table.findMany.mockResolvedValue([] as never);
+    mockedPrisma.event.findUnique.mockResolvedValue({
+      id: 1,
+      room_width_m: 10,
+      room_height_m: 10,
+    } as never);
+
+    await expect(
+      TablesService.update(1, 1, { pos_x: 0.3, pos_y: 5 }),
+    ).rejects.toThrow("does not fit within the room boundaries");
+
+    expect(mockedPrisma.table.update).not.toHaveBeenCalled();
+  });
+
+  it("flags two tables as conflicting once their seat rings are considered, even if the bare tables keep the 1m gap", async () => {
+    mockedPrisma.table.findFirst.mockResolvedValue({
+      id: 1,
+      shape: "redonda",
+      pos_x: null,
+      pos_y: null,
+      width: 1.5,
+      height: 1.5,
+    } as never);
+    mockedPrisma.table.findMany.mockResolvedValue([
+      {
+        id: 2,
+        name: "Mesa vecina",
+        shape: "redonda",
+        pos_x: 7.5,
+        pos_y: 5,
+        width: 1.5,
+        height: 1.5,
+      },
+    ] as never);
+    mockedPrisma.event.findUnique.mockResolvedValue({
+      id: 1,
+      room_width_m: 20,
+      room_height_m: 20,
+    } as never);
+
+    // bare edge-to-edge gap is exactly 1m, but seats push the two tables into conflict
+    await expect(
+      TablesService.update(1, 1, { pos_x: 5, pos_y: 5 }),
+    ).rejects.toThrow("Mesa vecina");
   });
 });
 

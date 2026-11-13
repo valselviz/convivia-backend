@@ -11,6 +11,40 @@ export type PlacedTable = {
 
 export const MIN_TABLE_GAP_METERS = 1;
 
+/** Radio de una silla individual, en metros. Chico a propósito: a veces hay que apretar sillas. */
+export const SEAT_RADIUS_M = 0.15;
+/** Separación entre el borde de la mesa y el centro de la silla. */
+export const SEAT_TABLE_GAP_M = 0.05;
+
+const SEAT_EXTRA_PER_SIDE_M = SEAT_TABLE_GAP_M + 2 * SEAT_RADIUS_M;
+
+/**
+ * Contorno real de una mesa incluyendo el anillo de sillas a su alrededor —
+ * es lo que hay que usar para chequear superposición con otras mesas y límites del salón,
+ * no el cuerpo desnudo de la mesa.
+ */
+export const toEffectiveFootprint = <T extends PlacedTable>(table: T): T => ({
+  ...table,
+  width: table.width + 2 * SEAT_EXTRA_PER_SIDE_M,
+  height: table.height + 2 * SEAT_EXTRA_PER_SIDE_M,
+});
+
+export type RoomBounds = { width: number; height: number };
+
+export const isWithinRoom = (
+  table: PlacedTable,
+  room: RoomBounds,
+): boolean => {
+  const halfW = table.width / 2;
+  const halfH = table.shape === "redonda" ? table.width / 2 : table.height / 2;
+  return (
+    table.pos_x - halfW >= 0 &&
+    table.pos_x + halfW <= room.width &&
+    table.pos_y - halfH >= 0 &&
+    table.pos_y + halfH <= room.height
+  );
+};
+
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 
