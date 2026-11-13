@@ -5,6 +5,7 @@ import {
   findConflict,
   isWithinRoom,
   toEffectiveFootprint,
+  MIN_TABLE_GAP_METERS,
   type PlacedTable,
 } from "../../lib/geometry.js";
 
@@ -63,7 +64,7 @@ const assertValidPlacement = async (
   if (conflict) {
     const conflictingTable = others.find((t) => t.id === conflict.id);
     throw new ConflictError(
-      `Table overlaps or is too close to "${conflictingTable?.name ?? "another table"}" (minimum 1m gap required, including seats)`,
+      `Table overlaps or is too close to "${conflictingTable?.name ?? "another table"}" (minimum ${MIN_TABLE_GAP_METERS}m gap required, including seats)`,
     );
   }
 };

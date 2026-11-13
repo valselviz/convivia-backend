@@ -36,14 +36,14 @@ describe("hasConflict: circle vs circle", () => {
     expect(hasConflict(a, b)).toBe(true);
   });
 
-  it("flags two round tables closer than the 1m gap", () => {
+  it("flags two round tables closer than the minimum gap", () => {
     const a = round({ pos_x: 0, pos_y: 0, width: 1 });
-    const b = round({ pos_x: 1.5, pos_y: 0, width: 1 });
-    // edge-to-edge distance = 1.5 - 0.5 - 0.5 = 0.5m, less than the 1m gap
+    const b = round({ pos_x: 1.2, pos_y: 0, width: 1 });
+    // edge-to-edge distance = 1.2 - 0.5 - 0.5 = 0.2m, less than the minimum gap
     expect(hasConflict(a, b)).toBe(true);
   });
 
-  it("allows two round tables with at least a 1m gap", () => {
+  it("allows two round tables with at least the minimum gap", () => {
     const a = round({ pos_x: 0, pos_y: 0, width: 1 });
     const b = round({ pos_x: 2.5, pos_y: 0, width: 1 });
     // edge-to-edge distance = 2.5 - 0.5 - 0.5 = 1.5m
@@ -58,14 +58,14 @@ describe("hasConflict: rectangle vs rectangle", () => {
     expect(hasConflict(a, b)).toBe(true);
   });
 
-  it("flags two rectangular tables closer than the 1m gap", () => {
+  it("flags two rectangular tables closer than the minimum gap", () => {
     const a = rect({ pos_x: 0, pos_y: 0, width: 2, height: 1 });
-    const b = rect({ pos_x: 2.5, pos_y: 0, width: 2, height: 1 });
-    // gap between edges = 2.5 - 1 - 1 = 0.5m
+    const b = rect({ pos_x: 2.2, pos_y: 0, width: 2, height: 1 });
+    // gap between edges = 2.2 - 1 - 1 = 0.2m
     expect(hasConflict(a, b)).toBe(true);
   });
 
-  it("allows two rectangular tables with at least a 1m gap", () => {
+  it("allows two rectangular tables with at least the minimum gap", () => {
     const a = rect({ pos_x: 0, pos_y: 0, width: 2, height: 1 });
     const b = rect({ pos_x: 4, pos_y: 0, width: 2, height: 1 });
     // gap between edges = 4 - 1 - 1 = 2m

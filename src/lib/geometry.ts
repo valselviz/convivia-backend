@@ -9,7 +9,7 @@ export type PlacedTable = {
   height: number;
 };
 
-export const MIN_TABLE_GAP_METERS = 1;
+export const MIN_TABLE_GAP_METERS = 0.5;
 
 /** Radio de una silla individual, en metros. Chico a propósito: a veces hay que apretar sillas. */
 export const SEAT_RADIUS_M = 0.15;
