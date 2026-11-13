@@ -6,6 +6,7 @@ import {
   createTableSchema,
   eventIdParamsSchema,
   idParamsSchema,
+  updateTableSchema,
 } from "../validation/schemas.js";
 
 export const TablesController = {
@@ -19,11 +20,26 @@ export const TablesController = {
     const payload = createTableSchema.parse(req.body);
     const table = await TablesService.create(eventId, {
       name: payload.name,
-      shape: payload.shape ?? null,
+      shape: payload.shape,
       seats: payload.seats,
       category: payload.category ?? null,
+      pos_x: payload.pos_x ?? null,
+      pos_y: payload.pos_y ?? null,
+      ...(payload.width !== undefined ? { width: payload.width } : {}),
+      ...(payload.height !== undefined ? { height: payload.height } : {}),
     });
     res.status(201).json(table);
+  },
+  update: async (req: Request, res: Response) => {
+    const { eventId, id } = idParamsSchema.parse(req.params);
+    const payload = updateTableSchema.parse(req.body);
+    const table = await TablesService.update(eventId, id, payload);
+    res.json(table);
+  },
+  delete: async (req: Request, res: Response) => {
+    const { eventId, id } = idParamsSchema.parse(req.params);
+    await TablesService.delete(eventId, id);
+    res.status(204).send();
   },
   assignGuest: async (req: Request, res: Response) => {
     const { eventId, id: tableId } = idParamsSchema.parse(req.params);

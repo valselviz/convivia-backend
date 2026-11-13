@@ -31,8 +31,14 @@ export const EventsController = {
 
   update: async (req: Request, res: Response) => {
     const { eventId } = eventIdParamsSchema.parse(req.params);
-    const { name } = updateEventSchema.parse(req.body);
-    const event = await EventsService.update(eventId, { name });
+    const { name, room_width_m, room_height_m } = updateEventSchema.parse(
+      req.body,
+    );
+    const event = await EventsService.update(eventId, {
+      name,
+      ...(room_width_m !== undefined ? { room_width_m } : {}),
+      ...(room_height_m !== undefined ? { room_height_m } : {}),
+    });
     res.json(event);
   },
 

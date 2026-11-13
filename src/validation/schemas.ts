@@ -91,9 +91,24 @@ export const tableShapeSchema = z.enum(["redonda", "rectangular"]);
 
 export const createTableSchema = z.object({
   name: z.string().trim().min(1, "name is required"),
-  shape: tableShapeSchema.optional().nullable(),
+  shape: tableShapeSchema,
   seats: z.coerce.number().int().positive("seats must be a positive number"),
   category: z.string().trim().min(1).optional().nullable(),
+  pos_x: z.coerce.number().optional().nullable(),
+  pos_y: z.coerce.number().optional().nullable(),
+  width: z.coerce.number().positive().optional(),
+  height: z.coerce.number().positive().optional(),
+});
+
+export const updateTableSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  shape: tableShapeSchema.optional(),
+  seats: z.coerce.number().int().positive().optional(),
+  category: z.string().trim().min(1).optional().nullable(),
+  pos_x: z.coerce.number().optional().nullable(),
+  pos_y: z.coerce.number().optional().nullable(),
+  width: z.coerce.number().positive().optional(),
+  height: z.coerce.number().positive().optional(),
 });
 
 export const assignGuestSchema = z.object({
@@ -109,4 +124,6 @@ export const createEventSchema = z.object({
 
 export const updateEventSchema = z.object({
   name: z.string().trim().min(1, "name is required"),
+  room_width_m: z.coerce.number().positive().optional(),
+  room_height_m: z.coerce.number().positive().optional(),
 });
