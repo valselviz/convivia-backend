@@ -104,7 +104,7 @@ describe("generateAssignment: locked assignments", () => {
     const input = baseInput({
       guests: [guest({ id: 1 }), guest({ id: 2 }), guest({ id: 3 })],
       tables: [table({ id: 10, seats: 1 }), table({ id: 20, seats: 2 })],
-      lockedAssignments: [{ guest_id: 1, table_id: 10 }],
+      lockedAssignments: [{ guest_id: 1, table_id: 10, seat_number: null }],
     });
 
     const result = generateAssignment(input, noWeights, { seed: 1 });
@@ -124,7 +124,7 @@ describe("generateAssignment: locked assignments", () => {
         guest({ id: 2, guest_type: "PLUS_ONE", main_guest_id: 1 }),
       ],
       tables: [table({ id: 10, seats: 4 }), table({ id: 20, seats: 4 })],
-      lockedAssignments: [{ guest_id: 1, table_id: 10 }],
+      lockedAssignments: [{ guest_id: 1, table_id: 10, seat_number: null }],
     });
 
     const result = generateAssignment(input, noWeights, { seed: 1 });

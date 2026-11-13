@@ -45,7 +45,7 @@ export const buildPlanningInput = async (
       }),
       prisma.tableAssignment.findMany({
         where: { table: { event_id: eventId }, locked: true },
-        select: { guest_id: true, table_id: true },
+        select: { guest_id: true, table_id: true, seat_number: true },
       }),
     ]);
 

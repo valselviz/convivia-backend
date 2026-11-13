@@ -44,6 +44,7 @@ export type SeatingRelationDTO = {
 export type SeatingLockedAssignment = {
   guest_id: number;
   table_id: number;
+  seat_number: number | null;
 };
 
 export type SeatingPlanningInput = {
