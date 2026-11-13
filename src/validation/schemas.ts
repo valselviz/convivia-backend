@@ -122,8 +122,12 @@ export const createEventSchema = z.object({
   name: z.string().trim().min(1).optional(),
 });
 
-export const updateEventSchema = z.object({
-  name: z.string().trim().min(1, "name is required"),
-  room_width_m: z.coerce.number().positive().optional(),
-  room_height_m: z.coerce.number().positive().optional(),
-});
+export const updateEventSchema = z
+  .object({
+    name: z.string().trim().min(1).optional(),
+    room_width_m: z.coerce.number().positive().optional(),
+    room_height_m: z.coerce.number().positive().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "No fields to update",
+  });

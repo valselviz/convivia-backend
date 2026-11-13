@@ -35,7 +35,7 @@ export const EventsController = {
       req.body,
     );
     const event = await EventsService.update(eventId, {
-      name,
+      ...(name !== undefined ? { name } : {}),
       ...(room_width_m !== undefined ? { room_width_m } : {}),
       ...(room_height_m !== undefined ? { room_height_m } : {}),
     });
