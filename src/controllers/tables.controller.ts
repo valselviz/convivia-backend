@@ -22,6 +22,7 @@ export const TablesController = {
       name: payload.name,
       shape: payload.shape,
       seats: payload.seats,
+      min_seats: payload.min_seats ?? null,
       category: payload.category ?? null,
       pos_x: payload.pos_x ?? null,
       pos_y: payload.pos_y ?? null,

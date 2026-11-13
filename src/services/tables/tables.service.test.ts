@@ -22,6 +22,19 @@ beforeEach(() => {
 });
 
 describe("TablesService.create", () => {
+  it("throws BadRequestError when min_seats exceeds seats", async () => {
+    await expect(
+      TablesService.create(1, {
+        name: "Mesa 1",
+        shape: "redonda",
+        seats: 4,
+        min_seats: 6,
+      } as never),
+    ).rejects.toThrow("min_seats cannot exceed seats");
+
+    expect(mockedPrisma.table.create).not.toHaveBeenCalled();
+  });
+
   it("creates the table without checking conflicts when no position is given", async () => {
     mockedPrisma.table.create.mockResolvedValue({ id: 1 } as never);
 
@@ -65,6 +78,25 @@ describe("TablesService.create", () => {
 });
 
 describe("TablesService.update", () => {
+  it("throws BadRequestError when the new min_seats exceeds the existing seats", async () => {
+    mockedPrisma.table.findFirst.mockResolvedValue({
+      id: 1,
+      seats: 4,
+      min_seats: null,
+      shape: "redonda",
+      pos_x: null,
+      pos_y: null,
+      width: 1.5,
+      height: 1.5,
+    } as never);
+
+    await expect(
+      TablesService.update(1, 1, { min_seats: 6 }),
+    ).rejects.toThrow("min_seats cannot exceed seats");
+
+    expect(mockedPrisma.table.update).not.toHaveBeenCalled();
+  });
+
   it("throws NotFoundError when the table doesn't exist in the event", async () => {
     mockedPrisma.table.findFirst.mockResolvedValue(null);
 

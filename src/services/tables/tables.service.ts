@@ -1,7 +1,16 @@
 import prisma from "../../client.js";
 import type { Prisma, Table } from "@prisma/client";
-import { ConflictError, NotFoundError } from "../../lib/errors.js";
+import { BadRequestError, ConflictError, NotFoundError } from "../../lib/errors.js";
 import { findConflict, type PlacedTable } from "../../lib/geometry.js";
+
+const assertValidCapacity = (
+  seats: number | undefined,
+  minSeats: number | null | undefined,
+): void => {
+  if (seats !== undefined && minSeats != null && minSeats > seats) {
+    throw new BadRequestError("min_seats cannot exceed seats");
+  }
+};
 
 const toPlacedTable = (table: Table): PlacedTable | null => {
   if (table.pos_x === null || table.pos_y === null) return null;
@@ -47,6 +56,8 @@ export const TablesService = {
     eventId: number,
     data: Omit<Prisma.TableUncheckedCreateInput, "event_id">,
   ): Promise<Table> => {
+    assertValidCapacity(data.seats as number, data.min_seats as number | null | undefined);
+
     if (data.pos_x != null && data.pos_y != null) {
       await assertNoConflict(eventId, {
         shape: data.shape as PlacedTable["shape"],
@@ -76,6 +87,13 @@ export const TablesService = {
     if (!existing) {
       throw new NotFoundError("Table not found");
     }
+
+    const mergedSeats = (data.seats as number | undefined) ?? existing.seats;
+    const mergedMinSeats =
+      data.min_seats !== undefined
+        ? (data.min_seats as number | null)
+        : existing.min_seats;
+    assertValidCapacity(mergedSeats, mergedMinSeats);
 
     const merged: PlacedTable = {
       id,

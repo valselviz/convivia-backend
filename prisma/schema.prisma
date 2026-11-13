@@ -90,6 +90,7 @@ model Table {
   name        String            @db.VarChar(50)
   shape       Shape             @default(redonda)
   seats       Int
+  min_seats   Int?
   category    String?           @db.VarChar(50)
   pos_x       Float?
   pos_y       Float?
